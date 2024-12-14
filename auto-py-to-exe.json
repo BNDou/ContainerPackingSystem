@@ -1,0 +1,81 @@
+{
+ "version": "auto-py-to-exe-configuration_v1",
+ "pyinstallerOptions": [
+  {
+   "optionDest": "noconfirm",
+   "value": true
+  },
+  {
+   "optionDest": "filenames",
+   "value": "C:/GitHub/ContainerPackingSystem/run.py"
+  },
+  {
+   "optionDest": "onefile",
+   "value": false
+  },
+  {
+   "optionDest": "console",
+   "value": true
+  },
+  {
+   "optionDest": "icon_file",
+   "value": "C:/GitHub/ContainerPackingSystem/image/\u8bbe\u8ba1\u88c5\u7bb1\u8bb0\u5f55\u7cfb\u7edf\u56fe\u6807.ico"
+  },
+  {
+   "optionDest": "name",
+   "value": "\u88c5\u7bb1\u8bb0\u5f55\u7ba1\u7406\u7cfb\u7edf"
+  },
+  {
+   "optionDest": "clean_build",
+   "value": false
+  },
+  {
+   "optionDest": "strip",
+   "value": false
+  },
+  {
+   "optionDest": "noupx",
+   "value": false
+  },
+  {
+   "optionDest": "disable_windowed_traceback",
+   "value": false
+  },
+  {
+   "optionDest": "uac_admin",
+   "value": false
+  },
+  {
+   "optionDest": "uac_uiaccess",
+   "value": false
+  },
+  {
+   "optionDest": "argv_emulation",
+   "value": false
+  },
+  {
+   "optionDest": "bootloader_ignore_signals",
+   "value": false
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/GitHub/ContainerPackingSystem/app/templates;templates/"
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/GitHub/ContainerPackingSystem/app/static;static/"
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/GitHub/ContainerPackingSystem/config.py;."
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/GitHub/ContainerPackingSystem/package_config.py;."
+  }
+ ],
+ "nonPyinstallerOptions": {
+  "increaseRecursionLimit": true,
+  "manualArguments": ""
+ }
+}

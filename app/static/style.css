@@ -1,0 +1,18 @@
+/*
+ * @FilePath     : /ContainerPackingSystem/app/static/style.css
+ * @Description  :  样式文件
+ * @Author       : BNDou
+ * @Date         : 2024-12-13 23:22:24
+ * @LastEditTime : 2024-12-14 22:18:24
+ */
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table-responsive {
+    margin-top: 1rem;
+}
+
+.navbar {
+    margin-bottom: 2rem;
+} 

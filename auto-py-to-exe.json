@@ -26,12 +26,16 @@
    "value": "\u88c5\u7bb1\u8bb0\u5f55\u7ba1\u7406\u7cfb\u7edf"
   },
   {
+   "optionDest": "upx_dir",
+   "value": "C:/Program Files/upx-4.2.4-win64"
+  },
+  {
    "optionDest": "clean_build",
-   "value": false
+   "value": true
   },
   {
    "optionDest": "strip",
-   "value": false
+   "value": true
   },
   {
    "optionDest": "noupx",
@@ -72,6 +76,26 @@
   {
    "optionDest": "datas",
    "value": "C:/GitHub/ContainerPackingSystem/package_config.py;."
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "flask"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "werkzeug"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "pandas"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "python-dateutil"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "Flask-SQLAlchemy"
   }
  ],
  "nonPyinstallerOptions": {

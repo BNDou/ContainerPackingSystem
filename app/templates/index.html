@@ -3,7 +3,7 @@
  * @Description  :  首页
  * @Author       : BNDou
  * @Date         : 2024-12-13 23:22:23
- * @LastEditTime : 2025-03-03 20:48:34
+ * @LastEditTime : 2025-03-03 21:06:05
 -->
 <!DOCTYPE html>
 <html lang="zh">
@@ -499,7 +499,22 @@
                 const monthText = `${year}年${parseInt(monthNum)}月`;
                 const textToCopy = `${monthText}\n总箱数：${totalBoxes}\n箱号区间：${boxRanges}`;
                 
-                await navigator.clipboard.writeText(textToCopy);
+                // 创建临时文本区域
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                
+                try {
+                    // 首先尝试使用现代的 Clipboard API
+                    await navigator.clipboard.writeText(textToCopy);
+                } catch (err) {
+                    // 如果 Clipboard API 失败，使用传统方法
+                    textArea.select();
+                    document.execCommand('copy');
+                } finally {
+                    // 清理临时元素
+                    document.body.removeChild(textArea);
+                }
                 
                 // 显示复制成功提示
                 Swal.fire({

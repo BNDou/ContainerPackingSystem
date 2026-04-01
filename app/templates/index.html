@@ -3,7 +3,7 @@
  * @Description  :  首页
  * @Author       : BNDou
  * @Date         : 2024-12-13 23:22:23
- * @LastEditTime : 2026-04-01 23:18:23
+ * @LastEditTime : 2026-04-02 00:25:11
 -->
 <!DOCTYPE html>
 <html lang="zh">
@@ -351,6 +351,207 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // 用户认证状态
+        let currentUserRole = '{{ user_role }}';
+        
+        // 检查用户权限
+        function isAdmin() {
+            return currentUserRole === 'admin';
+        }
+        
+        function isGuest() {
+            return currentUserRole === 'guest';
+        }
+        
+        // 根据用户角色更新UI
+        function updateUIBasedOnRole() {
+            if (isGuest()) {
+                // 隐藏添加记录表单
+                const addRecordCard = document.querySelector('.card:has(.card-header h5 .fa-plus-circle)');
+                if (addRecordCard) {
+                    addRecordCard.style.display = 'none';
+                }
+                
+                // 隐藏删除按钮
+                const deleteButtons = document.querySelectorAll('button[onclick^="deleteRecord"]');
+                deleteButtons.forEach(btn => {
+                    btn.style.display = 'none';
+                });
+                
+                // 隐藏设置按钮（佣金）
+                const commissionSettingsBtn = document.querySelector('.stats-card button[onclick^="openCommissionSettings"]');
+                if (commissionSettingsBtn) {
+                    commissionSettingsBtn.style.display = 'none';
+                }
+            }
+            
+            // 显示用户状态
+            showUserStatus();
+        }
+        
+        // 显示用户状态栏
+        function showUserStatus() {
+            const navBar = document.createElement('div');
+            navBar.className = 'user-status-bar';
+            navBar.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: var(--gradient-primary);
+                color: white;
+                padding: 8px 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                z-index: 1000;
+                font-size: 0.9rem;
+                box-shadow: var(--shadow);
+            `;
+            
+            if (isAdmin()) {
+                navBar.innerHTML = `
+                    <div>
+                        <i class="fas fa-user-shield"></i> 管理员模式 | 
+                        <span id="userInfo">欢迎您，管理员</span>
+                    </div>
+                    <div>
+                        <button onclick="logout()" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-sign-out-alt"></i> 退出登录
+                        </button>
+                    </div>
+                `;
+            } else {
+                navBar.innerHTML = `
+                    <div>
+                        <i class="fas fa-user"></i> 访客模式 | 
+                        <span>您当前以访客身份访问，仅可查看数据</span>
+                    </div>
+                    <div>
+                        <button onclick="login()" class="btn btn-outline-light btn-sm me-2">
+                            <i class="fas fa-sign-in-alt"></i> 管理员登录
+                        </button>
+                    </div>
+                `;
+            }
+            
+            document.body.insertBefore(navBar, document.body.firstChild);
+            
+            // 调整页面内容位置
+            document.querySelector('.container').style.marginTop = '60px';
+        }
+        
+        // 登录功能
+        async function login() {
+            try {
+                // 创建一个登录弹窗
+                const { value: formValues } = await Swal.fire({
+                    title: '管理员登录',
+                    html: `
+                        <input type="text" id="swal-username" class="swal2-input" placeholder="用户名">
+                        <input type="password" id="swal-password" class="swal2-input" placeholder="密码">
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: '登录',
+                    cancelButtonText: '取消',
+                    preConfirm: async () => {
+                        const username = document.getElementById('swal-username').value;
+                        const password = document.getElementById('swal-password').value;
+                        
+                        if (!username || !password) {
+                            Swal.showValidationMessage('请填写完整的用户名和密码');
+                            return false;
+                        }
+                        
+                        try {
+                            const response = await fetch('/login', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ username, password })
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (!response.ok) {
+                                Swal.showValidationMessage(data.error || '登录失败');
+                                return false;
+                            }
+                            
+                            return data;
+                        } catch (error) {
+                            Swal.showValidationMessage('网络错误，请重试');
+                            return false;
+                        }
+                    }
+                });
+                
+                if (formValues) {
+                    Swal.fire({
+                        title: '登录成功',
+                        text: '欢迎回来，管理员！',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: '错误',
+                    text: '登录失败，请稍后重试',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                });
+            }
+        }
+        
+        // 登出功能
+        async function logout() {
+            try {
+                const result = await Swal.fire({
+                    title: '确认退出',
+                    text: '您确定要退出登录吗？',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '退出',
+                    cancelButtonText: '取消'
+                });
+                
+                if (result.isConfirmed) {
+                    const response = await fetch('/logout', {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        Swal.fire({
+                            title: '已退出',
+                            text: '您已成功退出登录',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    }
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: '错误',
+                    text: '退出失败，请稍后重试',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                });
+            }
+        }
+        
+        // 页面加载完成后更新UI
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUIBasedOnRole();
+        });
+        
         async function addRecord() {
             const date = document.getElementById('date').value;
             const boxRange = document.getElementById('boxRange').value;
@@ -617,17 +818,26 @@
 
                 data.records.forEach(record => {
                     const tr = document.createElement('tr');
+                    let actionButton = '';
+                    
+                    // 只有管理员才显示删除按钮
+                    if (isAdmin()) {
+                        actionButton = `
+                            <button onclick="deleteRecord('${record.id}')" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        `;
+                    } else {
+                        actionButton = `<span class="text-muted">-</span>`;
+                    }
+                    
                     tr.innerHTML = `
                         <td>${record.id}</td>
                         <td>${record.box_range}</td>
                         <td>${record.boxes_count}</td>
                         <td>${record.formatted_date}</td>
                         <td>${record.created_at}</td>
-                        <td>
-                            <button onclick="deleteRecord('${record.id}')" class="btn btn-danger btn-sm">
-                                <i class="fas fa-trash"></i> 删除
-                            </button>
-                        </td>
+                        <td>${actionButton}</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -641,6 +851,177 @@
             }
         }
 
+        // 检查管理员是否存在
+        async function checkAdminExists() {
+            try {
+                const response = await fetch('/api/admin/check');
+                const data = await response.json();
+                
+                if (!data.admin_exists) {
+                    // 显示管理员注册弹窗
+                    showAdminRegistrationModal();
+                }
+            } catch (error) {
+                console.error('无法检查管理员状态:', error);
+            }
+        }
+        
+        // 显示管理员注册弹窗
+        function showAdminRegistrationModal() {
+            Swal.fire({
+                title: '创建管理员账户',
+                text: '检测到系统中没有管理员账户，请创建第一个管理员账户',
+                icon: 'info',
+                showCancelButton: false,
+                showCloseButton: false,
+                allowOutsideClick: false,
+                confirmButtonText: '创建账户',
+                html: `
+                    <div class="admin-registration-form">
+                        <div class="mb-3">
+                            <input type="text" id="swal-username" class="swal2-input" placeholder="用户名" style="margin: 15px 0;">
+                            <input type="password" id="swal-password" class="swal2-input" placeholder="密码（至少6位）" style="margin: 15px 0;">
+                            <input type="password" id="swal-confirm-password" class="swal2-input" placeholder="确认密码" style="margin: 15px 0;">
+                        </div>
+                    </div>
+                `,
+                preConfirm: async () => {
+                    const username = document.getElementById('swal-username').value;
+                    const password = document.getElementById('swal-password').value;
+                    const confirmPassword = document.getElementById('swal-confirm-password').value;
+                    
+                    if (!username || !password || !confirmPassword) {
+                        Swal.showValidationMessage('请填写完整信息');
+                        return false;
+                    }
+                    
+                    if (password !== confirmPassword) {
+                        Swal.showValidationMessage('两次输入的密码不一致');
+                        return false;
+                    }
+                    
+                    if (password.length < 6) {
+                        Swal.showValidationMessage('密码长度至少为6位');
+                        return false;
+                    }
+                    
+                    try {
+                        const response = await fetch('/api/admin/register', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                                username, 
+                                password, 
+                                confirm_password: confirmPassword 
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (!response.ok) {
+                            Swal.showValidationMessage(data.error || '创建管理员账户失败');
+                            return false;
+                        }
+                        
+                        return data;
+                    } catch (error) {
+                        Swal.showValidationMessage('连接服务器失败，请稍后重试');
+                        return false;
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: '创建成功',
+                        text: '管理员账户创建成功！欢迎使用系统',
+                        icon: 'success',
+                        confirmButtonText: '开始体验'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
+            });
+        }
+        
+        // 修改登录功能，首先检查管理员是否存在
+        async function login() {
+            try {
+                // 首先检查管理员是否存在
+                const checkResponse = await fetch('/api/admin/check');
+                const checkData = await checkResponse.json();
+                
+                if (!checkData.admin_exists) {
+                    // 没有管理员，显示注册窗口
+                    showAdminRegistrationModal();
+                    return;
+                }
+                
+                // 管理员存在，显示登录窗口
+                const { value: formValues } = await Swal.fire({
+                    title: '管理员登录',
+                    html: `
+                        <input type="text" id="swal-username" class="swal2-input" placeholder="用户名">
+                        <input type="password" id="swal-password" class="swal2-input" placeholder="密码">
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: '登录',
+                    cancelButtonText: '取消',
+                    preConfirm: async () => {
+                        const username = document.getElementById('swal-username').value;
+                        const password = document.getElementById('swal-password').value;
+                        
+                        if (!username || !password) {
+                            Swal.showValidationMessage('请填写完整的用户名和密码');
+                            return false;
+                        }
+                        
+                        try {
+                            const response = await fetch('/login', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ username, password })
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (!response.ok) {
+                                Swal.showValidationMessage(data.error || '登录失败');
+                                return false;
+                            }
+                            
+                            return data;
+                        } catch (error) {
+                            Swal.showValidationMessage('网络错误，请重试');
+                            return false;
+                        }
+                    }
+                });
+                
+                if (formValues) {
+                    Swal.fire({
+                        title: '登录成功',
+                        text: '欢迎回来，管理员！',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: '错误',
+                    text: '操作失败，请稍后重试',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                });
+            }
+        }
+        
         // 设置默认月份为当前月份
         document.getElementById('monthSelect').value = new Date().toISOString().slice(0, 7);
         // 设置默认日期为今天（使用本地时间）
@@ -649,6 +1030,8 @@
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const day = String(today.getDate()).padStart(2, '0');
         document.getElementById('date').value = `${year}-${month}-${day}`;
+        // 页面加载完成后检查管理员状态
+        checkAdminExists();
         // 页面加载完成后自动查询当月记录
         queryRecords();
     </script>

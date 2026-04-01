@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 装箱记录管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2ecc71;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            background: var(--gradient-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-header {
+            margin-bottom: 2rem;
+        }
+        
+        .login-header h1 {
+            color: var(--dark-color);
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-header p {
+            color: #7f8c8d;
+            margin-bottom: 0;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #ecf0f1;
+            padding: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.25);
+        }
+        
+        .btn-primary {
+            background: var(--gradient-primary);
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .login-footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ecf0f1;
+        }
+        
+        .login-footer p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .guest-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: left;
+        }
+        
+        .guest-info h6 {
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .guest-info ul {
+            margin: 0;
+            padding-left: 1.2rem;
+        }
+        
+        .guest-info li {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="login-header">
+                <h1><i class="fas fa-box-open"></i> 装箱记录管理</h1>
+                <p>请登录以继续访问系统</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="username" placeholder="用户名" required>
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" id="password" placeholder="密码" required>
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> 登录
+                    </button>
+                </div>
+            </form>
+            
+            <div class="guest-info">
+                <h6><i class="fas fa-info-circle"></i> 访客访问说明</h6>
+                <ul>
+                    <li>访客无需登录即可查看数据</li>
+                    <li>只能查询记录，无法添加或删除</li>
+                    <li>点击右上角"访客访问"即可进入</li>
+                </ul>
+            </div>
+            
+            <div class="login-footer">
+                <button class="btn btn-outline-secondary btn-sm" onclick="accessAsGuest()">
+                    <i class="fas fa-user"></i> 访客访问
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // 页面加载时检查管理员是否存在
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/api/admin/check');
+                const data = await response.json();
+                
+                if (!data.admin_exists) {
+                    // 显示管理员注册弹窗
+                    showAdminRegistrationModal();
+                }
+            } catch (error) {
+                console.error('无法检查管理员状态:', error);
+            }
+        });
+        
+        function showAdminRegistrationModal() {
+            Swal.fire({
+                title: '创建管理员账户',
+                text: '检测到系统中没有管理员账户，请创建第一个管理员账户',
+                icon: 'info',
+                showCancelButton: false,
+                showCloseButton: false,
+                allowOutsideClick: false,
+                confirmButtonText: '创建账户',
+                html: `
+                    <div class="admin-registration-form">
+                        <div class="mb-3">
+                            <input type="text" id="regUsername" class="swal2-input" placeholder="用户名" 
+                                   style="width: 100%; margin: 0.5em 0; padding: 0.5em;">
+                        </div>
+                        <div class="mb-3">
+                            <input type="password" id="regPassword" class="swal2-input" placeholder="密码（至少6位）" 
+                                   style="width: 100%; margin: 0.5em 0; padding: 0.5em;">
+                        </div>
+                        <div class="mb-3">
+                            <input type="password" id="regConfirmPassword" class="swal2-input" placeholder="确认密码" 
+                                   style="width: 100%; margin: 0.5em 0; padding: 0.5em;">
+                        </div>
+                        <div class="password-requirements" style="text-align: left; font-size: 12px; color: #666; margin-top: 0.5em;">
+                            <span>密码要求：</span>
+                            <ul style="margin: 0; padding-left: 1.5em;">
+                                <li>至少6个字符</li>
+                                <li>建议使用字母、数字组合</li>
+                            </ul>
+                        </div>
+                    </div>
+                `,
+                preConfirm: () => {
+                    const username = document.getElementById('regUsername').value;
+                    const password = document.getElementById('regPassword').value;
+                    const confirmPassword = document.getElementById('regConfirmPassword').value;
+                    
+                    if (!username || !password || !confirmPassword) {
+                        Swal.showValidationMessage('请填写所有字段');
+                        return false;
+                    }
+                    
+                    if (password !== confirmPassword) {
+                        Swal.showValidationMessage('两次输入的密码不一致');
+                        return false;
+                    }
+                    
+                    if (password.length < 6) {
+                        Swal.showValidationMessage('密码长度至少为6位');
+                        return false;
+                    }
+                    
+                    return { username, password, confirmPassword };
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const { username, password, confirmPassword } = result.value;
+                    
+                    try {
+                        const response = await fetch('/api/admin/register', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ username, password, confirm_password: confirmPassword })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            Swal.fire({
+                                title: '创建成功',
+                                text: '管理员账户创建成功！',
+                                icon: 'success',
+                                confirmButtonText: '进入系统'
+                            }).then(() => {
+                                window.location.href = '/';
+                            });
+                        } else {
+                            Swal.fire({
+                                title: '创建失败',
+                                text: data.error || '创建管理员账户失败',
+                                icon: 'error',
+                                confirmButtonText: '重试'
+                            }).then(() => {
+                                showAdminRegistrationModal(); // 重新显示弹窗
+                            });
+                        }
+                    } catch (error) {
+                        Swal.fire({
+                            title: '错误',
+                            text: '连接服务器失败，请稍后重试',
+                            icon: 'error',
+                            confirmButtonText: '确定'
+                        });
+                    }
+                }
+            });
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    Swal.fire({
+                        title: '登录成功',
+                        text: '欢迎，管理员！',
+                        icon: 'success',
+                        confirmButtonText: '确定'
+                    }).then(() => {
+                        // 登录成功后跳转到主页面
+                        window.location.href = '/';
+                    });
+                } else {
+                    Swal.fire({
+                        title: '登录失败',
+                        text: data.error || '用户名或密码错误',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: '错误',
+                    text: '登录失败，请稍后重试',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                });
+            }
+        });
+        
+        function accessAsGuest() {
+            // 直接访问主页面，以访客身份
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

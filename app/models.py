@@ -5,10 +5,11 @@ FilePath     : /ContainerPackingSystem/app/models.py
 Description  :  模型文件
 Author       : BNDou
 Date         : 2024-12-13 23:18:50
-LastEditTime : 2026-04-01 23:20:34
+LastEditTime : 2026-04-02 00:03:20
 '''
 from datetime import datetime
 import uuid
+from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 
 class BoxRecord(db.Model):
@@ -66,3 +67,39 @@ class BoxRecord(db.Model):
             return end_num - start_num + 1
         except:
             return 0
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='guest')  # 'admin' or 'guest'
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    
+    def __init__(self, username, password, role='guest'):
+        self.username = username
+        self.set_password(password)
+        self.role = role
+        
+    def set_password(self, password):
+        """设置密码哈希"""
+        self.password_hash = generate_password_hash(password)
+        
+    def check_password(self, password):
+        """验证密码"""
+        return check_password_hash(self.password_hash, password)
+        
+    @staticmethod
+    def get_guest_user():
+        """获取访客用户"""
+        return User(username='guest', password='guest', role='guest')
+        
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'role': self.role,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        }

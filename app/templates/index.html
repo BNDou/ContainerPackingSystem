@@ -3,7 +3,7 @@
  * @Description  :  首页
  * @Author       : BNDou
  * @Date         : 2024-12-13 23:22:23
- * @LastEditTime : 2025-06-05 01:37:14
+ * @LastEditTime : 2026-04-01 23:18:23
 -->
 <!DOCTYPE html>
 <html lang="zh">
@@ -121,6 +121,7 @@
             font-size: 1.2em;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         .stats-card h2 {
@@ -289,19 +290,31 @@
 
         <!-- 统计信息 -->
         <div class="row mb-4" id="statsContainer" style="display: none;">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="stats-card">
                     <h4><i class="fas fa-list"></i> 总记录数</h4>
                     <h2 id="totalRecords">0</h2>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="stats-card">
                     <button class="copy-btn" onclick="copyBoxInfo()" title="复制箱数信息">
                         <i class="fas fa-copy"></i>
                     </button>
                     <h4><i class="fas fa-box"></i> 总箱数</h4>
                     <h2 id="totalBoxes">0</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <button class="copy-btn" onclick="openCommissionSettings()" title="设置佣金单价">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <h4><i class="fas fa-coins"></i> 本月佣金</h4>
+                    <div style="position: relative;">
+                        <h2 id="commissionAmount" style="margin: 0;">0元</h2>
+                        <span id="commissionDetails" style="font-size: 0.9rem; opacity: 0.8; position: absolute; right: 0; bottom: 0; line-height: 1;">箱单价: 7元 × 总箱数</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -368,7 +381,7 @@
                         icon: 'success',
                         confirmButtonText: '确定'
                     });
-                    document.getElementById('date').value = '';
+                    // 保留日期，只清空箱号区间
                     document.getElementById('boxRange').value = '';
                     queryRecords();
                 } else {
@@ -534,6 +547,50 @@
             }
         }
 
+        // 佣金相关函数
+        let commissionUnitPrice = 7; // 默认单价7元
+        
+        function updateCommissionDisplay() {
+            const totalBoxes = parseInt(document.getElementById('totalBoxes').textContent) || 0;
+            const commission = totalBoxes * commissionUnitPrice;
+            
+            document.getElementById('commissionAmount').textContent = commission + '元';
+            document.getElementById('commissionDetails').textContent = `箱单价: ${commissionUnitPrice}元 × ${totalBoxes}箱`;
+        }
+        
+        async function openCommissionSettings() {
+            const { value: unitPrice } = await Swal.fire({
+                title: '设置佣金单价',
+                input: 'number',
+                inputLabel: '请输入每箱的佣金单价（元）',
+                inputValue: commissionUnitPrice,
+                inputAttributes: {
+                    min: 0,
+                    step: 0.1
+                },
+                showCancelButton: true,
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                inputValidator: (value) => {
+                    if (!value || value <= 0) {
+                        return '请输入有效的单价';
+                    }
+                }
+            });
+            
+            if (unitPrice) {
+                commissionUnitPrice = parseFloat(unitPrice);
+                updateCommissionDisplay();
+                Swal.fire({
+                    title: '设置成功',
+                    text: `佣金单价已设置为 ${commissionUnitPrice} 元/箱`,
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+        }
+
         async function queryRecords() {
             const month = document.getElementById('monthSelect').value;
             if (!month) {
@@ -553,6 +610,7 @@
                 document.getElementById('statsContainer').style.display = 'flex';
                 document.getElementById('totalRecords').textContent = data.total_records;
                 document.getElementById('totalBoxes').textContent = data.total_boxes;
+                updateCommissionDisplay();
 
                 const tbody = document.getElementById('recordsTable');
                 tbody.innerHTML = '';

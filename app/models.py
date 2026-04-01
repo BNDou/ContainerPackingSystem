@@ -5,7 +5,7 @@ FilePath     : /ContainerPackingSystem/app/models.py
 Description  :  模型文件
 Author       : BNDou
 Date         : 2024-12-13 23:18:50
-LastEditTime : 2024-12-14 22:17:47
+LastEditTime : 2026-04-01 23:20:34
 '''
 from datetime import datetime
 import uuid
@@ -22,7 +22,11 @@ class BoxRecord(db.Model):
     def __init__(self, date, box_range):
         self.id = str(uuid.uuid4())
         self.date = datetime.strptime(date, '%Y-%m-%d').date() if isinstance(date, str) else date
-        self.box_range = box_range
+        # 自动格式化单个数字为区间格式
+        if box_range and '-' not in box_range:
+            self.box_range = f"{box_range}-{box_range}"
+        else:
+            self.box_range = box_range
         self.created_at = datetime.now()
 
     @staticmethod
@@ -50,9 +54,15 @@ class BoxRecord(db.Model):
 
     def calculate_boxes(self):
         try:
-            start, end = self.box_range.split('-')
-            start_num = int(''.join(filter(str.isdigit, start)))
-            end_num = int(''.join(filter(str.isdigit, end)))
+            # 处理单个数字（如"1200"）和区间格式（如"1987-1996"）两种情况
+            if '-' in self.box_range:
+                start, end = self.box_range.split('-')
+                start_num = int(''.join(filter(str.isdigit, start)))
+                end_num = int(''.join(filter(str.isdigit, end)))
+            else:
+                # 单个数字情况，将其视为起始和结束相同的区间
+                start_num = end_num = int(''.join(filter(str.isdigit, self.box_range)))
+            
             return end_num - start_num + 1
         except:
             return 0
